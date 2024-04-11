@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Remera",
+    "description": "Elaborada en algodon",
+    "price": 1500,
+    "thumbnail": "https://res.cloudinary.com/deed7lfnh/image/upload/v1709419942/samples/woman-on-a-football-field.jpg",
+    "code": "c01",
+    "stock": 5,
+    "id": 1
+  },
+  {
+    "title": "Pantalon",
+    "description": "Elaborado en gabardina",
+    "price": 2000,
+    "thumbnail": "https://res.cloudinary.com/deed7lfnh/video/upload/v1709419927/samples/cld-sample-video.mp4",
+    "code": "c02",
+    "stock": 8,
+    "id": 2
+  }
+]

@@ -45,8 +45,8 @@ class ProductManager{
         this.saveProducts();
         console.log ("Se ha agregado el producto de manera correcta.");
     }
-    getProducts() {
-        return this.products;
+    getProducts(limit) {
+        return limit ? this.products.slice(0, limit) : this.products;
     }
     getProductById(id){
         const findProduct = this.products.find(product => product.id === id);

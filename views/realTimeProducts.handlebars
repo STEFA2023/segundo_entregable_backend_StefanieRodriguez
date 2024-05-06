@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos en Tiempo Real</title>
+</head>
+<body>
+    <h1>Listado de Productos en Tiempo Real</h1>
+    <ul id="productList">
+        {{#each products}}
+            <li>
+                <strong>{{title}}</strong><br>
+                Descripción: {{description}}<br>
+                Precio: ${{price}}<br>
+                <img src="{{thumbnail}}" alt="Thumbnail">
+            </li>
+        {{/each}}
+    </ul>
+
+    <form id="addProductForm">
+        <label for="title">Título:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="description">Descripción:</label><br>
+        <input type="text" id="description" name="description"><br>
+        <label for="price">Precio:</label><br>
+        <input type="number" id="price" name="price"><br>
+        <label for="thumbnail">URL del Thumbnail:</label><br>
+        <input type="text" id="thumbnail" name="thumbnail"><br>
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('updateProducts', () => {
+            location.reload();
+        });
+
+        document.getElementById('addProductForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const productData = Object.fromEntries(formData.entries());
+            socket.emit('addProduct', productData);
+        });
+    </script>
+</body>
+</html>

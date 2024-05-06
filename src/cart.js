@@ -1,5 +1,7 @@
-const express = require('express');
-const fs = require('fs');
+
+import express from 'express';
+
+
 
 const cartsRouter = express.Router();
 
@@ -44,4 +46,5 @@ cartsRouter.post('/:cid/product/:pid', (req, res) => {
     res.json({ message: 'Producto agregado al carrito correctamente', cart: carts[cartId] });
 });
 
-module.exports = cartsRouter;
+
+export { cartsRouter };

@@ -1,15 +1,66 @@
-const express = require('express');
-const fs = require('fs');
-const ProductManager = require('./productManager');
+import { fileURLToPath } from 'url';
 
+import path from 'path';
+
+import express from 'express';
+import exphbs from 'express-handlebars';
+import http from 'http';
+import { Server as SocketIo } from 'socket.io';
+//import fs from 'fs';
+import {ProductManager} from './productManager.js';
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIo(server);
+//app.set('views', path.join(__dirname, 'views'));
+
+//app.engine('handlebars', exphbs.engine());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.engine('.hbs', exphbs.engine({ extname: '.hbs' }));
+app.set('view engine', '.hbs');
+app.set('views', path.join(__dirname, 'views'));
+
+app.set('view engine', 'handlebars');
+
+
 app.use(express.json());
+
 const productManager = new ProductManager();
-const cartsRouter = require('./cart');
+
+import {cartsRouter} from './cart.js';
+
 app.use('/api/carts', cartsRouter);
 
 
+io.on('connection', (socket) => {
+    console.log('Usuario conectado');
+
+    socket.on('disconnect', () => {
+        console.log('Usuario desconectado');
+    });
+
+    socket.on('productCreated', () => {
+        io.emit('updateProducts');
+    });
+
+    socket.on('productDeleted', () => {
+        io.emit('updateProducts');
+    });
+});
+
+
+app.get('/', async (req, res) => {
+    const products = await productManager.getProducts();
+    res.render('home', { products });
+});
+
+app.get('/realtimeproducts', async (req, res) => {
+    const products = await productManager.getProducts();
+    res.render('realTimeProducts', { products });
+});
 
 app.get('/api/products', async (req, res) => {
     try {
@@ -20,7 +71,6 @@ app.get('/api/products', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 app.get('/api/products/:pid', async (req, res) => {
     const productId = parseInt(req.params.pid);
@@ -43,7 +93,6 @@ app.post('/api/products', (req, res) => {
     res.status(201).json({ message: 'Producto agregado correctamente', product: newProduct });
 });
 
-
 app.put('/api/products/:pid', (req, res) => {
     const productId = req.params.pid;
     const updatedFields = req.body;
@@ -57,11 +106,8 @@ app.delete('/api/products/:pid', (req, res) => {
     res.json({ message: 'Producto eliminado correctamente' });
 });
 
-
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+
+server.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
-
-
-module.exports = app;

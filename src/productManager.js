@@ -1,5 +1,4 @@
-const fs = require('fs');
-
+import fs from 'fs';
 
 class ProductManager{
     constructor(){
@@ -106,4 +105,5 @@ console.log(productManager.getProducts());
 console.log(productManager.getProductById(2));
 
 
-module.exports = ProductManager;
+//module.exports = ProductManager;
+export { ProductManager };

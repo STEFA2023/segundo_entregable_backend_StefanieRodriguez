@@ -1,0 +1,72 @@
+
+<div>
+    <h1>Chat</h1>
+
+    <input type="text" id="chat" name="chat" placeholder="Ingrese su mensaje">
+    <br/>
+    <button onclick="sendMessage()"> Enviar </button>
+
+    <div><p id= "chatList"></p>
+</div>
+
+</div>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+    const serverAddress = 'https://localhost:8080';
+    const socketClient = io(serverAddress);
+    const chat = document.getElementById('chat');
+    const chatList = document.getElementById('chatList');
+
+
+
+
+    socketClient.on('newMessageConfirmation', users => {
+            console.log(users);
+        });
+
+
+    const sendMessage = async () => {
+        if (chat.value !== '') {
+            if (user) {
+                socketClient.emit('newMessage', { user: user, message: chat.value });
+                console.log('Mensaje enviado');
+                chatList.innerHTML += `<br/> ${user}:${chat.value}`;
+                chat.value = '';
+            }
+            
+        }
+    }
+
+    const askForUser = async () => {
+        const result = await Swal.fire({
+            title: 'Por favor ingrese su usuario.',
+            input: 'text',
+            text: 'Nombre:',
+            icon: 'warning',
+            inputValidator: value => { return !value && 'Debe ingresar el usuario para participar' },
+            allowOutsideClick: false,
+            willClose: () => {
+            chat.focus(); 
+        }
+        });
+
+        user = result.value;
+        console.log(user);
+    }
+
+    chat.addEventListener('keyup', (evt) => {
+        if (evt.key === 'Enter') sendMessage()
+    });
+
+    (async () => {
+        await askForUser();
+    })();
+
+</script>
+
+

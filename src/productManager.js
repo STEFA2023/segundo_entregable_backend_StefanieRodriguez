@@ -1,7 +1,9 @@
 import fs from 'fs';
+import EventEmitter from 'events';
 
-class ProductManager{
+class ProductManager extends EventEmitter{
     constructor(){
+        super();
         this.path = 'products.json';
         this.products =[];
         this.nextProductId = 1;
@@ -25,6 +27,7 @@ class ProductManager{
     saveProducts() {
         try {
             fs.writeFileSync(this.path, JSON.stringify(this.products, null, 2));
+            this.emit('updateProducts'); 
         } catch (error) {
             console.error("Error al guardar los productos:", error);
         }
@@ -101,9 +104,11 @@ const product2 = {
 productManager.addProduct(product2);
 
 
-console.log(productManager.getProducts());
-console.log(productManager.getProductById(2));
+//console.log(productManager.getProducts());
+//console.log(productManager.getProductById(2));
 
+productManager.on('updateProducts', () => {
+    console.log('Productos actualizados.');
+});
 
-//module.exports = ProductManager;
-export { ProductManager };
+export default  productManager;

@@ -1,34 +1,41 @@
-import { fileURLToPath } from 'url';
-
-import path from 'path';
-
 import express from 'express';
-import exphbs from 'express-handlebars';
+import mongoose from 'mongoose';
+import handlebars from 'express-handlebars';
+import { Server } from 'socket.io';
+import config from './config.js';
+import productsRouter from './routes/products.routes.js';
+import usersRouter from './routes/users.routes.js';
+import viewsRouter from './routes/views.routes.js';
 import http from 'http';
-import { Server as SocketIo } from 'socket.io';
-//import fs from 'fs';
-import {ProductManager} from './productManager.js';
 
 const app = express();
-const server = http.createServer(app);
-const io = new SocketIo(server);
-//app.set('views', path.join(__dirname, 'views'));
 
-//app.engine('handlebars', exphbs.engine());
+let messages = [];
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
-app.engine('.hbs', exphbs.engine({ extname: '.hbs' }));
-app.set('view engine', '.hbs');
-app.set('views', path.join(__dirname, 'views'));
-
+// Configura Handlebars y permite el acceso a las propiedades de los prototipos
+app.engine('handlebars', handlebars.engine({
+    runtimeOptions: {
+        allowProtoPropertiesByDefault: true,
+        allowProtoMethodsByDefault: true
+    }
+}));
+//
+//app.engine('handlebars', handlebars.engine());
+app.set('views', `${config.DIRNAME}/views`);
 app.set('view engine', 'handlebars');
 
 
-app.use(express.json());
+app.use('/', viewsRouter);
+app.use('/api/products', productsRouter);
+app.use('/api/users', usersRouter);
+app.use('/static', express.static(`${config.DIRNAME}/public`));
 
-const productManager = new ProductManager();
+
+const server = http.createServer(app);
+const io = new Server(server);
 
 import {cartsRouter} from './cart.js';
 
@@ -52,62 +59,29 @@ io.on('connection', (socket) => {
 });
 
 
-app.get('/', async (req, res) => {
-    const products = await productManager.getProducts();
-    res.render('home', { products });
+const httpServer = app.listen(config.PORT, async () => {
+    await mongoose.connect(config.MONGODB_URI);
+    console.log(`Servidor escuchando en el puerto ${config.PORT} enlazada a bbdd`);
+    console.log(config.DIRNAME);
 });
 
-app.get('/realtimeproducts', async (req, res) => {
-    const products = await productManager.getProducts();
-    res.render('realTimeProducts', { products });
+
+const socketServer = new Server(httpServer);
+socketServer.on('connection', client =>{
+    console.log('Cliente conectado!');
 });
 
-app.get('/api/products', async (req, res) => {
-    try {
-        let limit = req.query.limit ? parseInt(req.query.limit) : undefined;
-        const products = await productManager.getProducts(limit);
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
 
-app.get('/api/products/:pid', async (req, res) => {
-    const productId = parseInt(req.params.pid);
-    try {
-        const product = await productManager.getProductById(productId);
-        if (product) {
-            res.json(product);
-        } else {
-            res.status(404).json({ error: 'Producto no encontrado' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Error al obtener el producto' });
-    }
-});
+socketServer.on('connection', client => {
+    
+    client.emit('chatLog', messages);
+    console.log(`Cliente conectado, id ${client.id} desde ${client.handshake.address}`);
 
-app.post('/api/products', (req, res) => {
-    const { title, description, code, price, stock, category, thumbnails } = req.body;
-    const newProduct = { id: Date.now().toString(), title, description, code, price, stock, category, thumbnails, status: true };
-    productManager.addProduct(newProduct);
-    res.status(201).json({ message: 'Producto agregado correctamente', product: newProduct });
-});
+    
+    client.on('newMessage', message => {
+        messages.push(message);
+        console.log(`Mensaje recibido desde ${client.id}: ${message}`);
 
-app.put('/api/products/:pid', (req, res) => {
-    const productId = req.params.pid;
-    const updatedFields = req.body;
-    productManager.updateProduct(productId, updatedFields);
-    res.json({ message: 'Producto actualizado correctamente' });
-});
-
-app.delete('/api/products/:pid', (req, res) => {
-    const productId = req.params.pid;
-    productManager.deleteProduct(productId);
-    res.json({ message: 'Producto eliminado correctamente' });
-});
-
-const PORT = process.env.PORT || 8080;
-
-server.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
+        socketServer.emit('messageArrived', message);
+    });
 });

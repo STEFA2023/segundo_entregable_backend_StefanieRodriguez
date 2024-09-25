@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Vincula tu hoja de estilos aquí -->
+</head>
+<body>
+    <div class="register-container">
+        <h2>Create Your Account</h2>
+        <form action="/api/sessions/register" method="POST">
+            <!-- First Name -->
+            <div class="input-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required="required">
+            </div>
+
+            <!-- Last Name -->
+            <div class="input-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required="required">
+            </div>
+
+            <!-- Email -->
+            <div class="input-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required="required">
+            </div>
+
+            <!-- Password -->
+            <div class="input-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required="required">
+            </div>
+
+
+            <!-- Botón de Enviar -->
+            <button type="submit">Register</button>
+
+            <!-- Enlace para iniciar sesión si ya tienes una cuenta -->
+            <p class="login-link">Already have an account? <a href="/login">Log in</a></p>
+        </form>
+    </div>
+</body>
+</html>

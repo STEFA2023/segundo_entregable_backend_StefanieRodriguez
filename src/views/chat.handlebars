@@ -1,72 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
 
-<div>
-    <h1>Chat</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
 
-    <input type="text" id="chat" name="chat" placeholder="Ingrese su mensaje">
-    <br/>
-    <button onclick="sendMessage()"> Enviar </button>
+<body>
 
-    <div><p id= "chatList"></p>
-</div>
+    <div>
+        <h1>Chat</h1>
 
-</div>
+        <input type="text" id="chat" name="chat" placeholder="Ingrese su mensaje">
+        <br />
+        <button onclick="sendMessage()"> Enviar </button>
+
+        <div>
+            <p id="chatList"></p>
+        </div>
+
+    </div>
+    <script>
+
+        const serverAddress = 'http://localhost:8080';
+        const socketClient = io(serverAddress);
+        const chat = document.getElementById('chat');
+        const chatList = document.getElementById('chatList');
 
 
+        let user;
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-
-    const serverAddress = 'https://localhost:8080';
-    const socketClient = io(serverAddress);
-    const chat = document.getElementById('chat');
-    const chatList = document.getElementById('chatList');
-
-
-
-
-    socketClient.on('newMessageConfirmation', users => {
+        socketClient.on('newMessageConfirmation', users => {
             console.log(users);
         });
 
-
-    const sendMessage = async () => {
-        if (chat.value !== '') {
-            if (user) {
-                socketClient.emit('newMessage', { user: user, message: chat.value });
-                console.log('Mensaje enviado');
-                chatList.innerHTML += `<br/> ${user}:${chat.value}`;
-                chat.value = '';
-            }
-            
-        }
-    }
-
-    const askForUser = async () => {
-        const result = await Swal.fire({
-            title: 'Por favor ingrese su usuario.',
-            input: 'text',
-            text: 'Nombre:',
-            icon: 'warning',
-            inputValidator: value => { return !value && 'Debe ingresar el usuario para participar' },
-            allowOutsideClick: false,
-            willClose: () => {
-            chat.focus(); 
-        }
+        socketClient.on('chatLog', messages => {
+            chatList.innerHTML = '';
+            messages.forEach(message => {
+                chatList.innerHTML += `<br/> ${message.user}: ${message.message}`;
+            });
         });
 
-        user = result.value;
-        console.log(user);
-    }
+        const sendMessage = async () => {
+            if (chat.value !== '') {
+                if (user) {
+                    socketClient.emit('newMessage', { user: user, message: chat.value });
+                    console.log('Mensaje enviado');
+                    chatList.innerHTML += `<br/> ${user}: ${chat.value}`;
+                    chat.value = '';
+                }
+            }
+        };
 
-    chat.addEventListener('keyup', (evt) => {
-        if (evt.key === 'Enter') sendMessage()
-    });
+        const askForUser = async () => {
+            const result = await Swal.fire({
+                title: 'Por favor ingrese su usuario.',
+                input: 'text',
+                text: 'Nombre:',
+                icon: 'warning',
+                inputValidator: value => { return !value && 'Debe ingresar el usuario para participar' },
+                allowOutsideClick: false,
+                willClose: () => {
+                    chat.focus();
+                }
+            });
 
-    (async () => {
-        await askForUser();
-    })();
+            user = result.value;
+            console.log(user);
+        };
 
-</script>
+        chat.addEventListener('keyup', (evt) => {
+            if (evt.key === 'Enter') sendMessage();
+        });
 
+        (async () => {
+            await askForUser();
+        })();
+    </script>
+</body>
 
+</html>

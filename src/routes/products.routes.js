@@ -1,67 +1,77 @@
 import { Router } from 'express';
-//import productManager from '../productManager.js';
-//import { uploader } from '../uploader';
-import productsModel from '../dao/models/products.model.js';
-//import config from '../config';
+import {uploader} from '../uploader.js';
+import config from '../config.js';
+import ProductsManager from '../dao/products.manager.mdb.js';
 
 const router = Router();
+const manager = new ProductsManager();
 
+router.param('id', async (req, res, next, id) => {
+    if (!config.MONGODB_ID_REGEX.test(req.params.id)) {
+        return res.status(400).send({ origin: config.SERVER, payload: null, error: 'Id no válido' });
+    }
+
+    next();
+})
 
 router.get('/', async (req, res) => {
     try {
-        let limit = req.query.limit ? parseInt(req.query.limit) : undefined;
-        const products = await productsModel.find().limit(limit);
-        res.json(products);
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        const products = await manager.getAll();
+
+        res.status(200).send({ origin: config.SERVER, payload: products });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 
-router.get('/api/products', async (req, res) => {
+router.get('/one/:id', async (req, res) => {
     try {
-        let limit = req.query.limit ? parseInt(req.query.limit) : undefined;
-        const products = await productsModel.getProducts(limit);
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        const product = await manager.getById(req.params.id);
+        res.status(200).send({ origin: config.SERVER, payload: product });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 
-router.get('/api/products/:pid', async (req, res) => {
-    const productId = parseInt(req.params.pid);
+router.post('/', uploader.single('thumbnail'), async (req, res) => {
     try {
-        const product = await productsModel.getProductById(productId);
-        if (product) {
-            res.json(product);
-        } else {
-            res.status(404).json({ error: 'Producto no encontrado' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Error al obtener el producto' });
+        const socketServer = req.app.get('socketServer');
+        const process = await manager.add(req.body);
+        
+        res.status(200).send({ origin: config.SERVER, payload: process });
+
+        socketServer.emit('newProduct', req.body);
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 
-router.post('/api/products', (req, res) => {
-    const { title, description, code, price, stock, category, thumbnails } = req.body;
-    const newProduct = { id: Date.now().toString(), title, description, code, price, stock, category, thumbnails, status: true };
-    productsModel.addProduct(newProduct);
-    res.status(201).json({ message: 'Producto agregado correctamente', product: newProduct });
+router.put('/:id', async (req, res) => {
+    try {
+        const filter = { _id: req.params.id };
+        const update = req.body;
+        const options = { new: true };
+        const process = await manager.update(filter, update, options);
+        
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+    }
 });
 
-router.put('/api/products/:pid', (req, res) => {
-    const productId = req.params.pid;
-    const updatedFields = req.body;
-    productsModel.updateProduct(productId, updatedFields);
-    res.json({ message: 'Producto actualizado correctamente' });
+router.delete('/:id', async (req, res) => {
+    try {
+        const filter = { _id: req.params.id };
+        const process = await manager.delete(filter);
+
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+    }
 });
 
-router.delete('/api/products/:pid', (req, res) => {
-    const productId = req.params.pid;
-    productsModel.deleteProduct(productId);
-    res.json({ message: 'Producto eliminado correctamente' });
+router.all('*', async (req, res) => {
+    res.status(404).send({ origin: config.SERVER, payload: null, error: 'No se encuentra la ruta solicitada' }); 
 });
-
-
 
 export default router;

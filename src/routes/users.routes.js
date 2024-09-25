@@ -1,60 +1,72 @@
 import { Router } from 'express';
-//import { users } from '../users.js';
-import { uploader } from '../uploader.js';
-
-import usersModel from '../dao/models/users.model.js';
 import config from '../config.js';
+import UsersManager from '../dao/users.manager.mdb.js';
+
 
 const router = Router();
+const manager = new UsersManager();
 
-//router.get('/users', async (req, res) => {
-  //  const users = await usersModel.find();
-    //res.status(200).send({ origin: config.SERVER , payload: users });
-//});
 
-router.get('/', async (req, res) => {
+router.get('/aggregate/:role', async (req, res) => {
     try {
-        const users = await usersModel.find();
-        res.status(200).send({ origin: config.SERVER, payload: users });
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).send('Error fetching users');
+        if (req.params.role === 'admin' || req.params.role === 'premium' || req.params.role === 'user') {
+            const match = { role: req.params.role };
+            const group = { _id: '$region', totalGrade: {$sum: '$grade'} };
+            const sort = { totalGrade: -1 };
+            const process = await manager.getAggregated(match, group, sort);
+
+            res.status(200).send({ origin: config.SERVER, payload: process });
+        } else {
+            res.status(200).send({ origin: config.SERVER, payload: null, error: 'role: solo se acepta admin, premium o user' });
+        }
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 
+router.get('/paginate/:page/:limit', async (req, res) => {
+    try {
+        const filter = { role: 'admin' };
+        const options = { page: req.params.page, limit: req.params.limit, sort: { lastName: 1 } };
+        const process = await manager.getPaginated(filter, options);
 
-
-router.post('/', uploader.single('thumbnail'), (req, res) => {
-    const socketServer = req.app.get('socketServer');
-
-    console.log(req.file);
-    console.log(req.body);
-    users.push(req.body);
-    res.status(200).send({ origin: 'server1', payload: req.body });
-
-    socketServer.emit('newUser', 'Se cargó nuevo usuario');
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+    }
 });
 
-router.put('/:id', (req, res) => {
-    const { id } = req.params;
-    const nid = +id; 
-    if (nid <= 0 || isNaN(nid)) { 
-        res.status(400).send({ origin: 'server1', payload: [], error: 'Se requiere id numérico mayor a 0' });
-    } else {
-        const { email = '', password = '' } = req.body;
+router.post('/', async (req, res) => {
+    try {
+        const process = await manager.add(req.body);
         
-        res.status(200).send({ origin: 'server1', payload: `Quiere modificar el id ${id} con el contenido del body`, body: { email, password } });
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 
-router.delete('/:id', (req, res) => {
-    const { id } = req.params;
-    const nid = +id; 
+router.put('/:id', async (req, res) => {
+    try {
+        const filter = { _id: req.params.id };
+        const update = req.body;
+        const options = { new: true };
+        const process = await manager.update(filter, update, options);
+        
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+    }
+});
 
-    if (nid <= 0 || isNaN(nid)) { 
-        res.status(400).send({ origin: 'server1', payload: [], error: 'Se requiere id numérico mayor a 0' });
-    } else {        
-        res.status(200).send({ origin: 'server1', payload: `Quiere borrar el id ${id}` });
+router.delete('/:id', async (req, res) => {
+    try {
+        const filter = { _id: req.params.id };
+        const process = await manager.delete(filter);
+
+        res.status(200).send({ origin: config.SERVER, payload: process });
+    } catch (err) {
+        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
     }
 });
 

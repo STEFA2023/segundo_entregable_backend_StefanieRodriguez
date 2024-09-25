@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Vincula tu hoja de estilos aquí -->
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="profile-container">
+        <h2>User Profile {{login_type}}</h2>
+
+        <!-- Información básica del usuario -->
+        <div class="user-info">
+            <h3>Welcome, {{user.firstName}}, {{user.lastName}}!</h3>
+            <h3>Rol: {{user.role}}</h3>
+        </div>
+
+        <form action="/api/sessions/logout" method="get"></form>
+    <button type="submit" class="btn btn-success">Salir</button>
+</form>
+</body>
+</html>

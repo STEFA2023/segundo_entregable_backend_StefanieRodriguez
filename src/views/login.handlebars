@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Usuario</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Vincula tu hoja de estilos aquí -->
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login to Your Account</h2>
+        <form action="/api/sessions/pplogin" method="POST">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required="required">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required="required">
+            </div>
+
+            {{#if showError}}
+            <div class="alert alert-danger" role="alert" style="margin-top: 16px;">
+                {{ errorMessage }}
+            </div>
+        {{/if}}
+        <div>
+            <button type="submit">Login</button>
+            <br/>
+            <button class="btn btn-info submit_btn" onclick="window.location.replace('/api/sessions/ghlogin')">Github</button>
+        </div>
+        
+            <p class="signup-link">Don't have an account? <a href="/signup">Sign up</a></p>
+        </form>
+    </div>
+</body>
+</html>

@@ -20,13 +20,24 @@ router.get('/hash/:password', async (req, res) => {
     res.status(200).send({ origin: config.SERVER, payload: createHash(req.params.password) });
 });
 
-router.post('/register', verifyRequiredBody(['firstName', 'lastName', 'email', 'password']), async (req, res) => {
+router.post('/register', verifyRequiredBody(['firstName', 'lastName', 'email', 'password', 'age', 'active']), async (req, res) => {
     try {
         const { firstName, lastName, email, password } = req.body;
+        const active = req.body.active === 'true'; 
+        const age = parseInt(req.body.age, 10); 
         const foundUser = await manager.getOne({ email: email });
 
         if (!foundUser) {
-            const process = await manager.add({ firstName, lastName, email, password: createHash(password)});
+            const newUser = {
+                firstName,
+                lastName,
+                email,
+                password: createHash(password),
+                age,
+                active
+            };
+
+            const process = await manager.add(newUser);
             res.status(200).send({ origin: config.SERVER, payload: process });
         } else {
             res.status(400).send({ origin: config.SERVER, payload: 'El email ya se encuentra registrado' });

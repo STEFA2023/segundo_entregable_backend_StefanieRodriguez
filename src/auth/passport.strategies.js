@@ -8,6 +8,7 @@ import { isValidPassword } from '../utils.js';
 
 const localStrategy = local.Strategy;
 const manager = new UsersManager();
+console.log(manager);
 
 const initAuthStrategies = () => {
     
@@ -50,7 +51,9 @@ const initAuthStrategies = () => {
                             firstName: profile._json.name.split(' ')[0],
                             lastName: profile._json.name.split(' ')[1],
                             email: email,
-                            password: 'none'
+                            password: 'none',
+                            age:'',
+                            active: true,
                         }
 
                         const process = await manager.add(user);

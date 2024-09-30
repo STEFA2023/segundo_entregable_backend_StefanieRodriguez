@@ -46,6 +46,8 @@ class ProductManager extends EventEmitter{
         this.products.push(product);
         this.saveProducts();
         console.log ("Se ha agregado el producto de manera correcta.");
+
+        this.emit('newProduct', product);
     }
     getProducts(limit) {
         return limit ? this.products.slice(0, limit) : this.products;

@@ -3,7 +3,7 @@ import config from '../config.js';
 import productManager from '../productManager.js';
 import ProductsManager from '../dao/products.manager.mdb.js';
 import UsersManager from '../dao/users.manager.mdb.js';
-
+import usersModel from '../dao/models/users.model.js';
 
 const router = Router();
 const manager = new ProductsManager();

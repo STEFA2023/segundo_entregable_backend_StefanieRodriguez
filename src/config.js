@@ -14,8 +14,6 @@ const clOptions = commandLine.opts();
 
 dotenv.config();
 
-console.log(process.env);
-
 const config = {
     SERVER: 'local',
     PORT: process.env.PORT || clOptions.port || 8080,

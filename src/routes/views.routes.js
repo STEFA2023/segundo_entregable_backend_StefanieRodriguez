@@ -4,6 +4,7 @@ import productManager from '../productManager.js';
 import ProductsManager from '../dao/products.manager.mdb.js';
 import UsersManager from '../dao/users.manager.mdb.js';
 import usersModel from '../dao/models/users.model.js';
+import productsModel from '../dao/models/products.model.js';
 
 const router = Router();
 const manager = new ProductsManager();
@@ -19,9 +20,15 @@ router.get('/realTimeProducts/:page', async (req, res) => {
 });
 
 router.get('/index', async (req, res) => {
-    const products = await productManager.getProducts();
-    res.render('index', { products });
+    try {
+        const products = await productsModel.find();  
+        res.render('index', { products });  
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
+        res.status(500).send('Error al obtener productos');
+    }
 });
+
 
 router.get('/users', async (req, res) => {
     try {
